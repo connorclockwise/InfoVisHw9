@@ -1,0 +1,15 @@
+Authors: 
+	 Connor Brinkmann
+	 Mizaan Pirani
+
+Writeup:
+
+	For this particular project, we couldn't encode all of the variables of 
+the dataset without losing the meaningful relationships of the data, so we decided 
+to pick the variables that had the most meaning to us; in this case the nominal,
+ordinal, and ratio values of the movies profits, budgets, year released, and IMBD 
+rating. A bubble plot is appropriate for representing large datasets of mostly 
+numerical data relationships between movies. The X-axis was used to order the 
+movies by release year, the Y-axis was used to represent production budget, the 
+size of the bubble was the profit, the intensity of the color of the bubble 
+represents the IMDB rating, and inside the bubble is the actual name of the movie. 

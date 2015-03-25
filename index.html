@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+    <head>
+        <meta charset="utf-8">
+        <title>D3 Test</title>
+        <script type="text/javascript" src="d3/d3.js"></script>
+        <link rel="stylesheet" type="text/css" href="visStyling.css">
+    </head>
+
+
+    <body>
+        <div class="container">
+            <svg class="chart">
+              <g class="grid"  width="1800" height="600">
+            </svg>
+            <div class="legend">
+                <p>Help</p>
+                <table >
+                  <tr>
+                    <td>Circles</td>
+                    <td>These are individual movies, the size of the circle
+                        is the runtime, and the color represents how well 
+                        the movie did on IMDB: red is poor performance, and
+                        green is great performance.</td> 
+                  </tr>
+                  <tr>
+                    <td>Interaction</td>
+                    <td>Click and drag to pan the view. Use the mouse wheel
+                        to zoom, and hover over individual circles to
+                        get details on demand.</td> 
+                  </tr>
+                </table>
+            </div>
+        </div>
+        <script type="text/javascript"> //src = d3/d3.js?
+            //##############    1    ####################
+            //Setting the size of our canvas
+            var width = 1200; 
+            var height = 800;
+            var gridWidth = 800;
+            var gridHeight = 600;
+            var leftMargin = 200;
+            var topMargin = 50;
+
+            var chart = d3.select(".chart")
+                .attr("width", width)
+                .attr("height", height);
+
+            var clip = chart.append("defs").append("svg:clipPath")
+                .attr("id", "clip")
+                .append("svg:rect")
+                .attr("id", "clip-rect")
+                .attr("x", leftMargin)
+                .attr("y", "0")
+                .attr("width", gridWidth)
+                .attr("height", gridHeight + topMargin);
+
+            var grid = d3.select(".grid")
+                .attr("width", gridWidth)
+                .attr("height", gridHeight);
+
+            var x;
+            var y;
+
+            var toolTip = d3.select("body").append("div")   
+                    .attr("class", "tooltip")               
+                    .style("opacity", 0);
+
+            //##############    2    ####################
+            //Pulling data from .csv file 
+            d3.csv("Movies.csv", function(error, data){
+                // dates = data.map(function(d) { return yearFormat.parse(d["Release Year"]); }).sort(d3.ascending);    
+                // console.log(dates.toString());
+                // console.log(d3.extent(data, function(d) { return +d["Worldwide Gross $"];}) );
+                xDomain = d3.extent(data, function(d) { return +d["Production Budget $"];});
+                x = d3.scale.linear()
+                            .domain(xDomain)
+                            .range([leftMargin, gridWidth + leftMargin]);
+                y = d3.scale.linear()
+                            .domain(d3.extent(data, function(d) { return +d["Worldwide Gross $"];}))
+                            .range([gridHeight + topMargin, topMargin]);
+                // y.domain([0, 1000000000]);
+                var bar = chart.selectAll("grid")
+                  .data(data)
+                  .enter()
+                  .append("g")
+                  .attr("clip-path", "url(#clip)");
+
+                profitMargin = d3.extent(data, function(d){ return +d["Profit $"] });
+
+
+                bar.append("circle")
+                  .attr("cx", function(d) { return (x(+d["Production Budget $"])); })
+                  .attr("cy", function(d) { return (y(+d["Worldwide Gross $"])); } ) 
+                  .attr("r", function(d){
+                    return ((+d["Run time in hours"]) * 4);} )
+                  .style("fill", function(d){
+                      return (d["IMDB Rating"] !== '' ?
+                        "rgb(" + parseInt(255 * ((1 - (+d["IMDB Rating"]) / 10))) + "," + parseInt(255 * (+d["IMDB Rating"] / 10)) + "," + 0 + ")"
+                        :"rgb(100,100,100)");
+                  })
+                  .on("mouseover", function(d) {   
+                        toolTip.transition()        
+                            .duration(200)      
+                            .style("opacity", .9);
+                        toolTip.html(d["Movie"] + "<br/>" +
+                                     "Released: " + d["Release Year"] + "<br/>" +
+                                     "Director: " + d["Director"] + "<br/>" +
+                                     "Genre: " + d["Genre"] + "<br/>" + 
+                                     "IMDB Rating: " + (d["IMDB Rating"] !== ''? d["IMDB Rating"] : "No data" ) + "<br/>" + 
+                                     "Profit: " + d["Profit $"] + "<br/>" + 
+                                     "Run time in hours: " + d["Run time in hours"] + "<br/>")
+                            .style("left", (d3.event.pageX) + "px")     
+                            .style("top", (d3.event.pageY - 28) + "px");
+                   })               
+                  .on("mouseout", function(d) {       
+                        toolTip.transition()        
+                            .duration(500)      
+                            .style("opacity", 0);   
+                   });
+
+                var xAxis = d3.svg.axis()
+                                .scale(x)
+                                .orient("bottom")
+                                .ticks(5)
+                                .tickFormat(d3.format('$02d'));
+
+                var yAxis = d3.svg.axis()
+                               .scale(y)
+                               .orient("left")
+                               .ticks(5)
+                               .tickFormat(d3.format("$,.0f"));
+
+                var xAxisGroup = grid.append("g")
+                                    .attr("class", "x axis") 
+                                    .attr("transform", "translate( " + 0  + ", " + (gridHeight+topMargin)+")")
+                                    .call(xAxis);
+                                  
+                var chartLabel = grid.append("text")
+                                    .attr("x", (grid.attr("width"))/2 + 150 )
+                                    .attr("y", 35 )
+                                    // .attr("dx", 100)
+                                    .attr("font-size", 30 )
+                                    .style("text-anchor", "middle")
+                                    .text("Movies by Production Value and Performance");
+
+                var xAxisLabel = xAxisGroup.append("text")
+                                    .attr("x", 80 + (grid.attr("width"))/2 )
+                                    .attr("y", 50 )
+                                    .attr("dx", 100)
+                                    .attr("font-size", 18 )
+                                    .style("text-anchor", "middle")
+                                    .text("Production Budget");
+
+                var yAxisGroup = grid.append("g")
+                                    .attr("class", "y axis")
+                                    .attr("transform", "translate( " + leftMargin + ", " +0+")")
+                                    .call(yAxis);
+
+                var yAxisLabel = yAxisGroup.append("text")
+                                    .attr("x", -(grid.attr("height"))/2 - 20 )
+                                    .attr("y", -130)
+                                    .attr("transform", function(d) {
+                                        return "rotate(-90)"; 
+                                        })
+                                    .style("text-anchor", "middle")
+                                    .text("WorldWide Gross");
+
+
+
+                var zoomListener = d3.behavior.zoom()
+                  .x(x)
+                  .y(y)
+                  .scaleExtent([0.5, 3])
+                  .on("zoom", zoomHandler);
+
+                function zoomHandler() {
+                        d3.selectAll("circle").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+                        // xAxisGroup.attr("transform", "translate(" +  + ")scale(" + d3.event.scale + ")");
+                        xAxisGroup.call(xAxis);
+                        yAxisGroup.call(yAxis);
+                        
+                }
+
+                zoomListener(chart);
+
+                });
+
+            
+
+        </script>
+    </body>
+</html>

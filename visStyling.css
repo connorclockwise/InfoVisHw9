@@ -1,0 +1,28 @@
+.chart{
+	float:left;
+}
+.container{
+}
+.legend{
+	float:left;
+	padding-left: 20px;
+	padding-right: 20px;
+	padding-bottom: 20px;
+	outline: #000000 dotted thick;
+}
+.tooltip{
+	position: absolute;           
+	  text-align: center;                                           
+	  padding: 3px;             
+	  font-size: 12px;
+	  font-color: #FF3333;   
+	  background: #FFBBBB;   
+	  border: 2px;      
+	  border-radius: 8px;           
+	  pointer-events: none;
+}
+td{
+	width:100px;
+	padding:5px;
+}
+
